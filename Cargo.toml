@@ -1,6 +1,10 @@
+[workspace]
+members = ["macros"]
+
 [package]
 name = "validex"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+validex-macros = { path = "macros" }

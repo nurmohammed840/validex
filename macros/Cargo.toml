@@ -1,0 +1,11 @@
+[package]
+name = "validex-macros"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote2 = "0.9"
+syn = "2"
