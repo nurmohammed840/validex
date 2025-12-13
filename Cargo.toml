@@ -3,8 +3,13 @@ members = ["macros"]
 
 [package]
 name = "validex"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2024"
+license = "MIT"
+description = """
+Input validating library.
+"""
+keywords = ["validation"]
 
 [dependencies]
-validex-macros = { path = "macros" }
+validex-macros = { version = "0.1.0" , path = "macros" }

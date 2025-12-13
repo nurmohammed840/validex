@@ -6,7 +6,7 @@ pub struct Range<R>(pub R);
 impl<R, T> Validate<T> for Range<R>
 where
     R: RangeBounds<T> + fmt::Debug + Clone,
-    T: ?Sized + PartialOrd<T> + fmt::Debug + Clone,
+    T: PartialOrd<T> + fmt::Debug + Clone,
 {
     type Error = errors::RangeError<T, R>;
     fn validate(&self, val: &T) -> Result<(), Self::Error> {

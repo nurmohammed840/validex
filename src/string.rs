@@ -12,5 +12,5 @@ pub fn url(val: &str) -> Result<()> {
 }
 
 pub fn email(val: &str) -> Result<()> {
-    url(val.as_ref())
+    url(val)
 }

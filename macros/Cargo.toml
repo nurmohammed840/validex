@@ -2,6 +2,11 @@
 name = "validex-macros"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+description = """
+Input validating library.
+"""
+keywords = ["validation"]
 
 [lib]
 proc-macro = true
