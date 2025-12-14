@@ -1,4 +1,4 @@
-use quote2::proc_macro2::TokenStream;
+use quote2::proc_macro2::{TokenStream, TokenTree};
 use quote2::{Quote, quote};
 use syn::*;
 
@@ -13,20 +13,19 @@ pub fn expand(input: &DeriveInput) -> TokenStream {
     let body = quote(|t| match data {
         Data::Struct(DataStruct { fields, .. }) => {
             for field in fields {
-                if let (Some(func), Some(key)) = (get_validator(field), &field.ident) {
+                if let (Some(input), Some(key)) = (get_validator(field), &field.ident) {
                     let name = key.to_string();
-                    quote!(t, {
-                        ::validex::__field(#name, &#func, &self.#key)?;
+                    split_comma(input, |input| {
+                        quote!(t, { ::validex::__field(#name, &#input, &self.#key)?; });
                     });
                 }
             }
         }
-        Data::Enum(_) => todo!(),
-        Data::Union(_) => todo!(),
+        Data::Enum(_) => unimplemented!(),
+        Data::Union(_) => unimplemented!(),
     });
 
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-
     let mut t = TokenStream::new();
     quote!(t, {
         impl #impl_generics #ident #ty_generics #where_clause {
@@ -44,4 +43,22 @@ pub fn get_validator(field: &Field) -> Option<&TokenStream> {
         Meta::List(kv) => kv.path.is_ident("validate").then_some(&kv.tokens),
         _ => None,
     })
+}
+
+fn split_comma(tokens: &TokenStream, mut f: impl FnMut(TokenStream)) {
+    let tokens = tokens.clone().into_iter();
+    let mut split = TokenStream::new();
+    for tt in tokens {
+        match tt {
+            TokenTree::Punct(p) if p.as_char() == ',' => {
+                if !split.is_empty() {
+                    f(std::mem::take(&mut split));
+                }
+            }
+            tt => split.extend([tt]),
+        }
+    }
+    if !split.is_empty() {
+        f(split);
+    }
 }

@@ -2,6 +2,11 @@ use validex::{self as v, Validate};
 
 #[derive(Validate)]
 struct SignupData {
+    #[validate(v::Any((
+        v::Range(10..=20),
+        v::Range(40..=50),
+    )))]
+    id: u32,
     #[validate(validate_email)]
     mail: String,
     #[validate(v::Length(..=20))]
@@ -34,6 +39,7 @@ struct User {
 #[test]
 fn example() -> v::Result {
     let signup_data = SignupData {
+        id: 42,
         mail: "alice.smith@example.com".into(),
         site: Some("personal-blog.net".into()),
         first_name: Some("Alice".into()),

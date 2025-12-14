@@ -3,27 +3,32 @@
 # Example
 
 ```rust
-use validex::{self as v, Validate};
+use validex::*;
 
 #[derive(Validate)]
 struct SignupData {
+    #[validate(Any((
+        Range(10..=20),
+        Range(40..=50),
+    )))]
+    id: u32,
     #[validate(validate_email)]
     mail: String,
-    #[validate(v::Length(..=20))]
+    #[validate(Length(..=20))]
     site: Option<String>,
-    #[validate(v::Maybe(validate_unique_username))]
+    #[validate(Maybe(validate_unique_username))]
     first_name: Option<String>,
-    #[validate(v::Range(18..24))]
+    #[validate(Range(18..24))]
     age: u32,
-    #[validate(v::Range(1.0..=3.0))]
+    #[validate(Range(1.0..=3.0))]
     height: f32,
 }
 
-fn validate_email<T>(_: &T) -> v::Result {
+fn validate_email<T>(_: &T) -> Result {
     Ok(())
 }
 
-fn validate_unique_username(username: &impl AsRef<str>) -> v::Result {
+fn validate_unique_username(username: &impl AsRef<str>) -> Result {
     if username.as_ref() == "xXxShad0wxXx" {
         return Err("invalid input".into());
     }
@@ -37,8 +42,9 @@ struct User {
 }
 
 #[test]
-fn example() -> v::Result {
+fn example() -> Result {
     let signup_data = SignupData {
+        id: 42,
         mail: "alice.smith@example.com".into(),
         site: Some("personal-blog.net".into()),
         first_name: Some("Alice".into()),

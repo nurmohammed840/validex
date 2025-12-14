@@ -50,3 +50,16 @@ impl FieldError {
         }
     }
 }
+
+#[derive(Debug)]
+pub struct Errors(pub Box<[DynError]>);
+impl Error for Errors {}
+impl Display for Errors {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        for err in &self.0 {
+            Display::fmt(err, f)?;
+            f.write_str("; ")?;
+        }
+        Ok(())
+    }
+}

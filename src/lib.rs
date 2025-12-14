@@ -1,8 +1,10 @@
+mod condition;
 mod len;
 mod number;
 
 pub mod errors;
 
+pub use condition::*;
 pub use len::*;
 pub use number::*;
 pub use validex_macros::Validate;
@@ -25,19 +27,6 @@ where
     type Error = E;
     fn validate(&self, args: &T) -> Result<(), Self::Error> {
         self(args)
-    }
-}
-
-pub struct Maybe<T>(pub T);
-
-impl<T, V: Validate<T>> Validate<Option<T>> for Maybe<V> {
-    type Error = V::Error;
-    #[inline]
-    fn validate(&self, val: &Option<T>) -> Result<(), Self::Error> {
-        match val {
-            None => Ok(()),
-            Some(val) => self.0.validate(val),
-        }
     }
 }
 
