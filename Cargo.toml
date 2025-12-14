@@ -13,3 +13,8 @@ keywords = ["validation"]
 
 [dependencies]
 validex-macros = { version = "0.2.0" , path = "macros" }
+anyhow = { version = "1", optional = true }
+
+
+[features]
+anyhow = ["dep:anyhow"]

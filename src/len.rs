@@ -36,10 +36,7 @@ impl<T, const N: usize> GetLen for [T; N] {
     }
 }
 
-impl<T> GetLen for Option<T>
-where
-    T: GetLen,
-{
+impl<T: GetLen> GetLen for Option<T> {
     #[inline]
     fn get_len(&self) -> Option<usize> {
         match self {
@@ -52,24 +49,17 @@ where
 macro_rules! len {
     [$($ty:ty)*] => [$(
         impl GetLen for $ty {
-            #[inline] fn get_len(&self) -> Option<usize> {
-                Some(self.len())
-            }
+            #[inline] fn get_len(&self) -> Option<usize> { Some(self.len()) }
         }
     )*];
     [@deref $($ty: ty)*] => [$(
         impl<T: GetLen> GetLen for $ty {
-            #[inline]
-            fn get_len(&self) -> Option<usize> {
-                T::get_len(self)
-            }
+            #[inline] fn get_len(&self) -> Option<usize> { T::get_len(self) }
         }
     )*];
     [@collection $(<$($p:tt),*> => $ty:ty)*] => [$(
        impl<$($p),*> GetLen for $ty {
-           #[inline] fn get_len(&self) -> Option<usize> {
-               Some(self.len())
-           }
+           #[inline] fn get_len(&self) -> Option<usize> { Some(self.len()) }
        }
     )*]
 }

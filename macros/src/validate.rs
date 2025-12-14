@@ -16,7 +16,7 @@ pub fn expand(input: &DeriveInput) -> TokenStream {
                 if let (Some(func), Some(key)) = (get_validator(field), &field.ident) {
                     let name = key.to_string();
                     quote!(t, {
-                        ::validex::__map_result(#name, ::validex::Validate::validate(&#func, &self.#key))?;
+                        ::validex::__field(#name, &#func, &self.#key)?;
                     });
                 }
             }
