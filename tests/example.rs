@@ -40,5 +40,6 @@ fn example() -> v::Result {
         age: 20,
         height: 1.65,
     };
-    User { signup_data }.validate()
+    User { signup_data }.validate()?;
+    Ok(())
 }

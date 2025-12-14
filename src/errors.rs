@@ -1,3 +1,4 @@
+use crate::DynError;
 use std::{
     error::Error,
     fmt::{self, Debug, Display, Formatter},
@@ -25,6 +26,27 @@ pub struct LengthError<R> {
 impl<R: Debug> Error for LengthError<R> {}
 impl<R: Debug> Display for LengthError<R> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "length {:?} is out of range {:?}", self.len, self.range)
+        write!(f, "length {} is out of range {:?}", self.len, self.range)
+    }
+}
+
+#[derive(Debug)]
+pub struct FieldError {
+    pub key: &'static str,
+    pub error: DynError,
+}
+impl Error for FieldError {}
+impl Display for FieldError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{} -> {}", self.key, self.error)
+    }
+}
+
+impl FieldError {
+    pub fn new(key: &'static str, err: impl Into<DynError>) -> FieldError {
+        FieldError {
+            key,
+            error: err.into(),
+        }
     }
 }

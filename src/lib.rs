@@ -7,8 +7,8 @@ pub use len::*;
 pub use number::*;
 pub use validex_macros::Validate;
 
-pub type DynError<'e> = Box<dyn std::error::Error + Send + Sync + 'e>;
-pub type Result<T = (), E = DynError<'static>> = std::result::Result<T, E>;
+pub type DynError = Box<dyn std::error::Error + Send + Sync>;
+pub type Result<T = (), E = DynError> = std::result::Result<T, E>;
 
 pub trait Validate<Args: ?Sized> {
     type Error;
@@ -36,4 +36,15 @@ impl<T, V: Validate<T>> Validate<Option<T>> for Maybe<V> {
             Some(val) => self.0.validate(val),
         }
     }
+}
+
+#[doc(hidden)]
+pub fn __map_result<T, E: Into<DynError>>(
+    key: &'static str,
+    result: Result<T, E>,
+) -> Result<T, errors::FieldError> {
+    result.map_err(|err| errors::FieldError {
+        key,
+        error: err.into(),
+    })
 }
