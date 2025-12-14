@@ -18,6 +18,23 @@ impl<T: Debug, R: Debug> Display for RangeError<T, R> {
 }
 
 #[derive(Debug)]
+pub struct ExcludeRangeError<T, R> {
+    pub value: T,
+    pub range: R,
+}
+
+impl<T: Debug, R: Debug> Error for ExcludeRangeError<T, R> {}
+impl<T: Debug, R: Debug> Display for ExcludeRangeError<T, R> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "value {:?} must not be in range {:?}",
+            self.value, self.range
+        )
+    }
+}
+
+#[derive(Debug)]
 pub struct LengthError<R> {
     pub len: usize,
     pub range: R,
