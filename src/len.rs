@@ -4,14 +4,14 @@ use std::ops::RangeBounds;
 
 pub struct Length<T>(pub T);
 
-impl<R, T> Validate<T> for Length<R>
+impl<R, T> Check<T> for Length<R>
 where
     R: RangeBounds<usize> + Clone,
     T: GetLen,
 {
     type Error = errors::LengthError<R>;
 
-    fn validate(&self, val: &T) -> Result<(), Self::Error> {
+    fn check(&self, val: &T) -> Result<(), Self::Error> {
         let Some(len) = val.get_len() else {
             return Ok(());
         };

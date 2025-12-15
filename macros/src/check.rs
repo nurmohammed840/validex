@@ -13,7 +13,7 @@ pub fn expand(input: &DeriveInput) -> TokenStream {
     let body = quote(|t| match data {
         Data::Struct(DataStruct { fields, .. }) => {
             for field in fields {
-                if let (Some(input), Some(key)) = (get_validator(field), &field.ident) {
+                if let (Some(input), Some(key)) = (get_validex_field(field), &field.ident) {
                     let name = key.to_string();
                     split_comma(input, |input| {
                         quote!(t, { ::validex::__field(#name, &#input, &self.#key)?; });
@@ -29,7 +29,7 @@ pub fn expand(input: &DeriveInput) -> TokenStream {
     let mut t = TokenStream::new();
     quote!(t, {
         impl #impl_generics #ident #ty_generics #where_clause {
-            fn validate(&self) -> ::validex::Result<(), ::validex::errors::FieldError> {
+            fn check(&self) -> ::validex::Result<(), ::validex::errors::FieldError> {
                 #body
                 ::std::result::Result::Ok(())
             }
@@ -38,9 +38,9 @@ pub fn expand(input: &DeriveInput) -> TokenStream {
     t
 }
 
-pub fn get_validator(field: &Field) -> Option<&TokenStream> {
+pub fn get_validex_field(field: &Field) -> Option<&TokenStream> {
     field.attrs.iter().find_map(|attr| match &attr.meta {
-        Meta::List(kv) => kv.path.is_ident("validate").then_some(&kv.tokens),
+        Meta::List(kv) => kv.path.is_ident("check").then_some(&kv.tokens),
         _ => None,
     })
 }

@@ -6,40 +6,40 @@ pub struct Any<V>(pub V);
 
 pub struct Maybe<T>(pub T);
 
-impl<T, V: Validate<T>> Validate<Option<T>> for Maybe<V> {
+impl<T, V: Check<T>> Check<Option<T>> for Maybe<V> {
     type Error = V::Error;
     #[inline]
-    fn validate(&self, val: &Option<T>) -> Result<(), Self::Error> {
+    fn check(&self, val: &Option<T>) -> Result<(), Self::Error> {
         match val {
             None => Ok(()),
-            Some(val) => self.0.validate(val),
+            Some(val) => self.0.check(val),
         }
     }
 }
 
 macro_rules! all {
     [$($ty:tt: $idx:tt)*] => [
-        impl<T, $($ty),*> Validate<T> for All<($($ty,)*)>
+        impl<T, $($ty),*> Check<T> for All<($($ty,)*)>
         where $(
-            $ty: Validate<T>,
+            $ty: Check<T>,
             $ty::Error: Into<DynError>,
         )* {
             type Error = DynError;
-            fn validate(&self, val: &T) -> Result<(), Self::Error> {
-                $(self.0.$idx.validate(val).map_err($ty::Error::into)?;)*
+            fn check(&self, val: &T) -> Result<(), Self::Error> {
+                $(self.0.$idx.check(val).map_err($ty::Error::into)?;)*
                 Ok(())
             }
         }
 
-        impl<T, $($ty),*> Validate<T> for Any<($($ty,)*)>
+        impl<T, $($ty),*> Check<T> for Any<($($ty,)*)>
         where $(
-            $ty: Validate<T>,
+            $ty: Check<T>,
             $ty::Error: Into<DynError>,
         )* {
             type Error = errors::Errors;
             #[allow(non_snake_case)]
-            fn validate(&self, val: &T) -> Result<(), Self::Error> {
-                $(let Err($ty) = self.0.$idx.validate(val) else { return Ok(()) };)*
+            fn check(&self, val: &T) -> Result<(), Self::Error> {
+                $(let Err($ty) = self.0.$idx.check(val) else { return Ok(()) };)*
                 Err(errors::Errors(Box::new([
                     $($ty.into(),)*
                 ])))

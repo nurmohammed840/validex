@@ -7,7 +7,7 @@ pub mod errors;
 pub use condition::*;
 pub use len::*;
 pub use number::*;
-pub use validex_macros::Validate;
+pub use validex_macros::Check;
 
 #[cfg(feature = "anyhow")]
 pub type DynError = anyhow::Error;
@@ -15,17 +15,17 @@ pub type DynError = anyhow::Error;
 pub type DynError = Box<dyn std::error::Error + Send + Sync>;
 pub type Result<T = (), E = DynError> = std::result::Result<T, E>;
 
-pub trait Validate<Args: ?Sized> {
+pub trait Check<Args: ?Sized> {
     type Error;
-    fn validate(&self, _: &Args) -> Result<(), Self::Error>;
+    fn check(&self, _: &Args) -> Result<(), Self::Error>;
 }
 
-impl<F, T: ?Sized, E> Validate<T> for F
+impl<F, T: ?Sized, E> Check<T> for F
 where
     F: Fn(&T) -> Result<(), E>,
 {
     type Error = E;
-    fn validate(&self, args: &T) -> Result<(), Self::Error> {
+    fn check(&self, args: &T) -> Result<(), Self::Error> {
         self(args)
     }
 }
@@ -34,10 +34,10 @@ where
 pub fn __field<V, Args>(key: &'static str, v: &V, args: &Args) -> Result<(), errors::FieldError>
 where
     Args: ?Sized,
-    V: Validate<Args> + ?Sized,
+    V: Check<Args> + ?Sized,
     V::Error: Into<DynError>,
 {
-    Validate::validate(v, args).map_err(|err| errors::FieldError {
+    Check::check(v, args).map_err(|err| errors::FieldError {
         key,
         error: err.into(),
     })

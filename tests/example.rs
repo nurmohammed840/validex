@@ -1,38 +1,38 @@
-use validex::{self as v, Validate};
+use validex::{self as v, Check};
 
-#[derive(Validate)]
+#[derive(Check)]
 struct SignupData {
-    #[validate(v::Any((
+    #[check(v::Any((
         v::Range(10..=20),
         v::Range(40..=50),
     )))]
     id: u32,
-    #[validate(validate_email)]
+    #[check(check_email)]
     mail: String,
-    #[validate(v::Length(..=20))]
+    #[check(v::Length(..=20))]
     site: Option<String>,
-    #[validate(v::Maybe(validate_unique_username))]
+    #[check(v::Maybe(check_unique_username))]
     first_name: Option<String>,
-    #[validate(v::Range(18..24))]
+    #[check(v::Range(18..24))]
     age: u32,
-    #[validate(v::Range(1.0..=3.0))]
+    #[check(v::Range(1.0..=3.0))]
     height: f32,
 }
 
-fn validate_email<T>(_: &T) -> v::Result {
+fn check_email<T>(_: &T) -> v::Result {
     Ok(())
 }
 
-fn validate_unique_username(username: &impl AsRef<str>) -> v::Result {
+fn check_unique_username(username: &impl AsRef<str>) -> v::Result {
     if username.as_ref() == "xXxShad0wxXx" {
         return Err("invalid input".into());
     }
     Ok(())
 }
 
-#[derive(Validate)]
+#[derive(Check)]
 struct User {
-    #[validate(SignupData::validate)]
+    #[check(SignupData::check)]
     signup_data: SignupData,
 }
 
@@ -46,6 +46,6 @@ fn example() -> v::Result {
         age: 20,
         height: 1.65,
     };
-    User { signup_data }.validate()?;
+    User { signup_data }.check()?;
     Ok(())
 }
