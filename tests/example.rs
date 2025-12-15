@@ -1,51 +1,42 @@
 use validex::{self as v, Check};
 
 #[derive(Check)]
-struct SignupData {
+struct UserData {
     #[check(v::Any((
         v::Range(10..=20),
+        30,
         v::Range(40..=50),
     )))]
     id: u32,
-    #[check(check_email)]
-    mail: String,
-    #[check(v::Length(..=20))]
+    #[check(v::Maybe((
+        v::Not("example.com"),
+        v::Length(..=20),
+        url,
+    )))]
     site: Option<String>,
-    #[check(v::Maybe(check_unique_username))]
-    first_name: Option<String>,
-    #[check(v::Range(18..24))]
+    #[check(v::Range(13..=28), v::Not(v::Range(18..=24)))]
     age: u32,
-    #[check(v::Range(1.0..=3.0))]
-    height: f32,
 }
 
-fn check_email<T>(_: &T) -> v::Result {
-    Ok(())
-}
-
-fn check_unique_username(username: &impl AsRef<str>) -> v::Result {
-    if username.as_ref() == "xXxShad0wxXx" {
-        return Err("invalid input".into());
-    }
+fn url<T: AsRef<str>>(_: &T) -> v::Result {
+    // ...
     Ok(())
 }
 
 #[derive(Check)]
 struct User {
-    #[check(SignupData::check)]
-    signup_data: SignupData,
+    #[check(UserData::check)]
+    data: UserData,
 }
 
 #[test]
 fn example() -> v::Result {
-    let signup_data = SignupData {
+    let data = UserData {
         id: 42,
-        mail: "alice.smith@example.com".into(),
-        site: Some("personal-blog.net".into()),
-        first_name: Some("Alice".into()),
-        age: 20,
-        height: 1.65,
+        site: Some("example.com".into()),
+        age: 25,
     };
-    User { signup_data }.check()?;
+    let aa = User { data }.check().err().unwrap();
+    println!("{:#}", aa);
     Ok(())
 }

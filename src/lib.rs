@@ -15,6 +15,19 @@ pub type DynError = anyhow::Error;
 pub type DynError = Box<dyn std::error::Error + Send + Sync>;
 pub type Result<T = (), E = DynError> = std::result::Result<T, E>;
 
+pub trait Verify<Args: ?Sized> {
+    type Error;
+    fn verify(&self, _: &Args) -> bool;
+    fn error(&self, _: &Args) -> Self::Error;
+
+    fn check(&self, val: &Args) -> Result<(), Self::Error> {
+        if !self.verify(val) {
+            return Err(self.error(val));
+        }
+        Ok(())
+    }
+}
+
 pub trait Check<Args: ?Sized> {
     type Error;
     fn check(&self, _: &Args) -> Result<(), Self::Error>;
@@ -37,8 +50,5 @@ where
     V: Check<Args> + ?Sized,
     V::Error: Into<DynError>,
 {
-    Check::check(v, args).map_err(|err| errors::FieldError {
-        key,
-        error: err.into(),
-    })
+    Check::check(v, args).map_err(|err| errors::FieldError::new(key, err))
 }

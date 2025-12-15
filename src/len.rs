@@ -4,6 +4,24 @@ use std::ops::RangeBounds;
 
 pub struct Length<T>(pub T);
 
+impl<R, T> Verify<T> for Length<R>
+where
+    R: RangeBounds<usize> + Clone,
+    T: Count,
+{
+    type Error = errors::LengthError<R>;
+    fn verify(&self, val: &T) -> bool {
+        self.0.contains(&val.count())
+    }
+
+    fn error(&self, val: &T) -> Self::Error {
+        errors::LengthError {
+            len: val.count(),
+            range: self.0.clone(),
+        }
+    }
+}
+
 impl<R, T> Check<T> for Length<R>
 where
     R: RangeBounds<usize> + Clone,
@@ -29,13 +47,6 @@ trait GetLen {
     fn get_len(&self) -> Option<usize>;
 }
 
-impl<T, const N: usize> GetLen for [T; N] {
-    #[inline]
-    fn get_len(&self) -> Option<usize> {
-        Some(N)
-    }
-}
-
 impl<T: GetLen> GetLen for Option<T> {
     #[inline]
     fn get_len(&self) -> Option<usize> {
@@ -46,20 +57,38 @@ impl<T: GetLen> GetLen for Option<T> {
     }
 }
 
+impl<T: Count> GetLen for T {
+    #[inline]
+    fn get_len(&self) -> Option<usize> {
+        Some(T::count(self))
+    }
+}
+
+trait Count {
+    fn count(&self) -> usize;
+}
+
+impl<T, const N: usize> Count for [T; N] {
+    #[inline]
+    fn count(&self) -> usize {
+        N
+    }
+}
+
 macro_rules! len {
     [$($ty:ty)*] => [$(
-        impl GetLen for $ty {
-            #[inline] fn get_len(&self) -> Option<usize> { Some(self.len()) }
+        impl Count for $ty {
+            #[inline] fn count(&self) -> usize { self.len() }
         }
     )*];
     [@deref $($ty: ty)*] => [$(
-        impl<T: GetLen> GetLen for $ty {
-            #[inline] fn get_len(&self) -> Option<usize> { T::get_len(self) }
+        impl<T: Count> Count for $ty {
+            #[inline] fn count(&self) -> usize { T::count(self) }
         }
     )*];
     [@collection $(<$($p:tt),*> => $ty:ty)*] => [$(
-       impl<$($p),*> GetLen for $ty {
-           #[inline] fn get_len(&self) -> Option<usize> { Some(self.len()) }
+       impl<$($p),*> Count for $ty {
+           #[inline] fn count(&self) -> usize { self.len() }
        }
     )*]
 }

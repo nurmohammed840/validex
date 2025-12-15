@@ -1,40 +1,48 @@
 use crate::*;
-use std::{fmt, ops::RangeBounds};
+use std::ops::RangeBounds;
 
 pub struct Range<R>(pub R);
 
-pub struct ExcludeRange<R>(pub R);
-
-impl<R, T> Check<T> for Range<R>
+impl<R, T> Verify<T> for Range<R>
 where
-    R: RangeBounds<T> + fmt::Debug + Clone,
-    T: PartialOrd<T> + fmt::Debug + Clone,
+    R: RangeBounds<T> + Clone,
+    T: PartialOrd<T> + Clone,
 {
     type Error = errors::RangeError<T, R>;
-    fn check(&self, val: &T) -> Result<(), Self::Error> {
-        if !self.0.contains(val) {
-            return Err(errors::RangeError {
-                value: val.clone(),
-                range: self.0.clone(),
-            });
+
+    fn verify(&self, val: &T) -> bool {
+        self.0.contains(val)
+    }
+
+    fn error(&self, val: &T) -> Self::Error {
+        errors::RangeError {
+            value: val.clone(),
+            range: self.0.clone(),
         }
-        Ok(())
     }
 }
 
-impl<R, T> Check<T> for ExcludeRange<R>
+impl<R, T> Check<T> for Range<R>
 where
-    R: RangeBounds<T> + fmt::Debug + Clone,
-    T: PartialOrd<T> + fmt::Debug + Clone,
+    R: RangeBounds<T> + Clone,
+    T: PartialOrd<T> + Clone,
 {
-    type Error = errors::ExcludeRangeError<T, R>;
+    type Error = errors::RangeError<T, R>;
     fn check(&self, val: &T) -> Result<(), Self::Error> {
-        if self.0.contains(val) {
-            return Err(errors::ExcludeRangeError {
-                value: val.clone(),
-                range: self.0.clone(),
-            });
-        }
-        Ok(())
+        Verify::check(self, val)
+    }
+}
+
+impl<V, T: Clone> Verify<T> for V
+where
+    V: PartialEq<T> + Clone,
+{
+    type Error = errors::EquelError<T, V>;
+
+    fn verify(&self, val: &T) -> bool {
+        self.eq(val)
+    }
+    fn error(&self, val: &T) -> Self::Error {
+        errors::EquelError(val.clone(), self.clone())
     }
 }
