@@ -9,46 +9,51 @@ pub use len::*;
 pub use number::*;
 pub use validex_macros::Check;
 
-#[cfg(feature = "anyhow")]
-pub type DynError = anyhow::Error;
-#[cfg(not(feature = "anyhow"))]
-pub type DynError = Box<dyn std::error::Error + Send + Sync>;
-pub type Result<T = (), E = DynError> = std::result::Result<T, E>;
+pub type DynError<'err> = Box<dyn std::error::Error + Send + Sync + 'err>;
+pub type Result<T = (), E = DynError<'static>> = std::result::Result<T, E>;
 
-pub trait Verify<Args: ?Sized> {
+pub trait Verify<Args> {
     type Error;
-    fn verify(&self, _: &Args) -> bool;
-    fn error(&self, _: &Args) -> Self::Error;
-
-    fn check(&self, val: &Args) -> Result<(), Self::Error> {
-        if !self.verify(val) {
-            return Err(self.error(val));
-        }
-        Ok(())
-    }
+    fn verify(&self, _: Args) -> bool;
+    fn error(&self, _: Args) -> Self::Error;
 }
 
-pub trait Check<Args: ?Sized> {
+pub trait Check<Args> {
     type Error;
-    fn check(&self, _: &Args) -> Result<(), Self::Error>;
+    fn check(&self, _: Args) -> Result<(), Self::Error>;
 }
 
-impl<F, T: ?Sized, E> Check<T> for F
+impl<F, T, E> Check<T> for F
 where
-    F: Fn(&T) -> Result<(), E>,
+    F: Fn(T) -> Result<(), E>,
 {
     type Error = E;
-    fn check(&self, args: &T) -> Result<(), Self::Error> {
+    fn check(&self, args: T) -> Result<(), Self::Error> {
         self(args)
     }
 }
 
-#[doc(hidden)]
-pub fn __field<V, Args>(key: &'static str, v: &V, args: &Args) -> Result<(), errors::FieldError>
+pub(crate) fn check<'a, T, V>(this: &V, val: &'a T) -> Result<(), V::Error>
 where
-    Args: ?Sized,
-    V: Check<Args> + ?Sized,
-    V::Error: Into<DynError>,
+    // T: ?Sized,
+    V: Verify<&'a T>,
 {
-    Check::check(v, args).map_err(|err| errors::FieldError::new(key, err))
+    if !this.verify(val) {
+        return Err(this.error(val));
+    }
+    Ok(())
+}
+
+#[doc(hidden)]
+pub fn __field<'a, V, T>(
+    key: &'static str,
+    this: &V,
+    val: &'a T,
+) -> Result<(), errors::FieldError<'a>>
+where
+    // T: ?Sized,
+    V: Check<&'a T>,
+    V::Error: Into<DynError<'a>>,
+{
+    Check::check(this, val).map_err(|err| errors::FieldError::new(key, err))
 }

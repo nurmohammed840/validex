@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 
 pub struct Any<V>(pub V);
 
@@ -12,29 +12,32 @@ where
 {
     type Error = errors::Unexpected<V::Error>;
     #[inline]
-    fn verify(&self, val: &T) -> bool {
+    fn verify(&self, val: T) -> bool {
         !self.0.verify(val)
     }
-
-    fn error(&self, val: &T) -> Self::Error {
+    #[inline]
+    fn error(&self, val: T) -> Self::Error {
         errors::Unexpected(self.0.error(val))
     }
 }
 
-impl<V, T> Check<T> for Not<V>
+impl<'a, V, T> Check<&'a T> for Not<V>
 where
-    V: Verify<T>,
+    V: Verify<&'a T>,
 {
     type Error = errors::Unexpected<V::Error>;
-    fn check(&self, val: &T) -> Result<(), Self::Error> {
-        Verify::check(self, val)
+    fn check(&self, val: &'a T) -> Result<(), Self::Error> {
+        check(self, val)
     }
 }
 
-impl<T, V: Check<T>> Check<Option<T>> for Maybe<V> {
+impl<'a, T, V> Check<&'a Option<T>> for Maybe<V>
+where
+    V: Check<&'a T>,
+{
     type Error = V::Error;
     #[inline]
-    fn check(&self, val: &Option<T>) -> Result<(), Self::Error> {
+    fn check(&self, val: &'a Option<T>) -> Result<(), Self::Error> {
         match val {
             None => Ok(()),
             Some(val) => self.0.check(val),
@@ -44,34 +47,34 @@ impl<T, V: Check<T>> Check<Option<T>> for Maybe<V> {
 
 macro_rules! t {
     [$($ty:tt: $idx:tt)*] => [
-        impl<T, $($ty: Check<T>),*> Check<T> for ($($ty,)*)
-        where $($ty::Error: Into<DynError>,)* {
-            type Error = DynError;
-            fn check(&self, val: &T) -> Result<(), Self::Error> {
+        impl<'a, T, $($ty: Check<&'a T>),*> Check<&'a T> for ($($ty,)*)
+        where $($ty::Error: Into<DynError<'a>>,)* {
+            type Error = DynError<'a>;
+            fn check(&self, val: &'a T) -> Result<(), Self::Error> {
                 $(self.$idx.check(val).map_err($ty::Error::into)?;)*
                 Ok(())
             }
         }
 
-        impl<T, $($ty: Verify<T>),*> Verify<T> for Any<($($ty,)*)>
-        where $( $ty::Error: Into<DynError>, )* {
-            type Error = errors::Errors;
-            fn verify(&self, val: &T) -> bool {
+        impl<'a, T, $($ty: Verify<&'a T>),*> Verify<&'a T> for Any<($($ty,)*)>
+        where $( $ty::Error: Into<DynError<'a>>, )* {
+            type Error = errors::Errors<'a>;
+            fn verify(&self, val: &'a T) -> bool {
                 $( self.0.$idx.verify(val) )||*
             }
-            fn error(&self, val: &T) -> Self::Error {
+            fn error(&self, val: &'a T) -> Self::Error {
                 errors::Errors(Box::new([
                     $(self.0.$idx.error(val).into(),)*
                 ]))
             }
         }
 
-        impl<T, $($ty: Verify<T>),*> Check<T> for Any<($($ty,)*)>
-        where $( $ty::Error: Into<DynError>, )* {
-            type Error = errors::Errors;
+        impl<'a, T, $($ty: Verify<&'a T>),*> Check<&'a T> for Any<($($ty,)*)>
+        where $( $ty::Error: Into<DynError<'a>>,)* {
+            type Error = errors::Errors<'a>;
             #[allow(non_snake_case)]
-            fn check(&self, val: &T) -> Result<(), Self::Error> {
-                Verify::check(self, val)
+            fn check(&self, val: &'a T) -> Result<(), Self::Error> {
+                check(self, val)
             }
         }
     ]

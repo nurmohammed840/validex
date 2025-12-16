@@ -3,46 +3,47 @@ use std::ops::RangeBounds;
 
 pub struct Range<R>(pub R);
 
-impl<R, T> Verify<T> for Range<R>
+impl<'a, R, T> Verify<&'a T> for Range<R>
 where
+    T: PartialOrd<T>,
     R: RangeBounds<T> + Clone,
-    T: PartialOrd<T> + Clone,
 {
-    type Error = errors::RangeError<T, R>;
-
+    type Error = errors::RangeError<&'a T, R>;
+    #[inline]
     fn verify(&self, val: &T) -> bool {
         self.0.contains(val)
     }
-
-    fn error(&self, val: &T) -> Self::Error {
+    #[inline]
+    fn error(&self, value: &'a T) -> Self::Error {
         errors::RangeError {
-            value: val.clone(),
+            value,
             range: self.0.clone(),
         }
     }
 }
 
-impl<R, T> Check<T> for Range<R>
+impl<'a, R, T> Check<&'a T> for Range<R>
 where
+    T: PartialOrd<T>,
     R: RangeBounds<T> + Clone,
-    T: PartialOrd<T> + Clone,
 {
-    type Error = errors::RangeError<T, R>;
-    fn check(&self, val: &T) -> Result<(), Self::Error> {
-        Verify::check(self, val)
+    type Error = errors::RangeError<&'a T, R>;
+    fn check(&self, val: &'a T) -> Result<(), Self::Error> {
+        check(self, val)
     }
 }
 
-impl<V, T: Clone> Verify<T> for V
+impl<'a, V, T> Verify<&'a T> for V
 where
     V: PartialEq<T> + Clone,
 {
-    type Error = errors::EquelError<T, V>;
-
+    type Error = errors::EquelError<&'a T, V>;
+    #[inline]
     fn verify(&self, val: &T) -> bool {
         self.eq(val)
     }
-    fn error(&self, val: &T) -> Self::Error {
-        errors::EquelError(val.clone(), self.clone())
+    #[inline]
+    fn error(&self, val: &'a T) -> Self::Error {
+        errors::EquelError(val, self.clone())
     }
 }

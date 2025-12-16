@@ -53,29 +53,29 @@ impl<R: Debug> Display for LengthError<R> {
 }
 
 #[derive(Debug)]
-pub struct FieldError {
+pub struct FieldError<'err> {
     pub key: &'static str,
-    pub error: DynError,
+    pub error: DynError<'err>,
 }
-impl FieldError {
-    pub fn new(key: &'static str, err: impl Into<DynError>) -> FieldError {
+impl<'err> FieldError<'err> {
+    pub fn new(key: &'static str, err: impl Into<DynError<'err>>) -> FieldError<'err> {
         FieldError {
             key,
             error: err.into(),
         }
     }
 }
-impl Error for FieldError {}
-impl Display for FieldError {
+impl<'err> Error for FieldError<'err> {}
+impl<'err> Display for FieldError<'err> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{} -> {}", self.key, self.error)
     }
 }
 
 #[derive(Debug)]
-pub struct Errors(pub Box<[DynError]>);
-impl Error for Errors {}
-impl Display for Errors {
+pub struct Errors<'err>(pub Box<[DynError<'err>]>);
+impl<'err> Error for Errors<'err> {}
+impl<'err> Display for Errors<'err> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         for err in &self.0 {
             Display::fmt(err, f)?;

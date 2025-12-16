@@ -1,4 +1,4 @@
-use validex::{self as v, Check};
+use validex::{self as v, Check, DynError};
 
 #[derive(Check)]
 struct UserData {
@@ -18,7 +18,7 @@ struct UserData {
     age: u32,
 }
 
-fn url<T: AsRef<str>>(_: &T) -> v::Result {
+fn url(_: &impl AsRef<str>) -> v::Result<(), DynError<'_>> {
     // ...
     Ok(())
 }
@@ -36,7 +36,8 @@ fn example() -> v::Result {
         site: Some("example.com".into()),
         age: 25,
     };
-    let aa = User { data }.check().err().unwrap();
-    println!("{:#}", aa);
+    let binding = User { data };
+    let err = binding.check().err().unwrap();
+    println!("{:#}", err);
     Ok(())
 }
