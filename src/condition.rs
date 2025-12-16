@@ -1,5 +1,7 @@
 use crate::*;
 
+pub struct All<V>(pub V);
+
 pub struct Any<V>(pub V);
 
 pub struct Maybe<T>(pub T);
@@ -47,8 +49,12 @@ where
 
 macro_rules! t {
     [$($ty:tt: $idx:tt)*] => [
-        impl<'a, T, $($ty: Check<&'a T>),*> Check<&'a T> for ($($ty,)*)
-        where $($ty::Error: Into<DynError<'a>>,)* {
+        #[doc(hidden)]
+        impl<'a, T, $($ty,)*> Check<&'a T> for ($($ty,)*)
+        where
+            $($ty: Check<&'a T>,)*
+            $($ty::Error: Into<DynError<'a>>,)*
+        {
             type Error = DynError<'a>;
             fn check(&self, val: &'a T) -> Result<(), Self::Error> {
                 $(self.$idx.check(val).map_err($ty::Error::into)?;)*
@@ -56,8 +62,12 @@ macro_rules! t {
             }
         }
 
-        impl<'a, T, $($ty: Verify<&'a T>),*> Verify<&'a T> for Any<($($ty,)*)>
-        where $( $ty::Error: Into<DynError<'a>>, )* {
+        #[doc(hidden)]
+        impl<'a, T, $($ty),*> Verify<&'a T> for Any<($($ty,)*)>
+        where
+            $($ty: Verify<&'a T>,)*
+            $($ty::Error: Into<DynError<'a>>,)*
+        {
             type Error = errors::Errors<'a>;
             fn verify(&self, val: &'a T) -> bool {
                 $( self.0.$idx.verify(val) )||*
@@ -69,10 +79,13 @@ macro_rules! t {
             }
         }
 
-        impl<'a, T, $($ty: Verify<&'a T>),*> Check<&'a T> for Any<($($ty,)*)>
-        where $( $ty::Error: Into<DynError<'a>>,)* {
+        #[doc(hidden)]
+        impl<'a, T, $($ty),*> Check<&'a T> for Any<($($ty,)*)>
+        where
+            $($ty: Verify<&'a T>,)*
+            $($ty::Error: Into<DynError<'a>>,)*
+        {
             type Error = errors::Errors<'a>;
-            #[allow(non_snake_case)]
             fn check(&self, val: &'a T) -> Result<(), Self::Error> {
                 check(self, val)
             }
@@ -80,7 +93,28 @@ macro_rules! t {
     ]
 }
 
-t! { V0:0 }
+macro_rules! all {
+    [$last_ty:tt : $last_idx:tt => $($ty:tt : $idx:tt)*] => [
+        #[doc(hidden)]
+        impl<'a, T, $($ty,)* $last_ty> Verify<&'a T> for All<($($ty,)* $last_ty,)>
+        where
+            $($ty: Verify<&'a T>,)*
+            $last_ty: Verify<&'a T>,
+            $( $ty::Error: Into<DynError<'a>>, )*
+            $last_ty::Error: Into<DynError<'a>>
+        {
+            type Error = DynError<'a>;
+            fn verify(&self, val: &'a T) -> bool {
+                $( self.0.$idx.verify(val) &&)* self.0.$last_idx.verify(val)
+            }
+            fn error(&self, val: &'a T) -> Self::Error {
+                $( if !self.0.$idx.verify(val) { return self.0.$idx.error(val).into(); } )*
+                self.0.$last_idx.error(val).into()
+            }
+        }
+    ]
+}
+
 t! { V0:0 V1:1 }
 t! { V0:0 V1:1 V2:2 }
 t! { V0:0 V1:1 V2:2 V3:3 }
@@ -96,3 +130,81 @@ t! { V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 V11:11 V12:12 }
 t! { V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 V11:11 V12:12 V13:13 }
 t! { V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 V11:11 V12:12 V13:13 V14:14 }
 t! { V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 V11:11 V12:12 V13:13 V14:14 V15:15 }
+
+all! { V1  :1 => V0:0 }
+all! { V2  :2 => V0:0 V1:1 }
+all! { V3  :3 => V0:0 V1:1 V2:2 }
+all! { V4  :4 => V0:0 V1:1 V2:2 V3:3 }
+all! { V5  :5 => V0:0 V1:1 V2:2 V3:3 V4:4 }
+all! { V6  :6 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 }
+all! { V7  :7 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 }
+all! { V8  :8 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 }
+all! { V9  :9 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 }
+all! { V10:10 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 }
+all! { V11:11 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 }
+all! { V12:12 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 V11:11 }
+all! { V13:13 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 V11:11 V12:12 }
+all! { V14:14 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 V11:11 V12:12 V13:13 }
+all! { V15:15 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 V11:11 V12:12 V13:13 V14:14 }
+
+#[cfg_attr(docsrs, doc(fake_variadic))]
+#[doc = "This trait is implemented for tuples up to 16 items long."]
+impl<'a, T, V0> Check<T> for (V0,)
+where
+    V0: Check<T>,
+{
+    type Error = V0::Error;
+    #[inline]
+    fn check(&self, val: T) -> Result<(), Self::Error> {
+        self.0.check(val)
+    }
+}
+
+#[cfg_attr(docsrs, doc(fake_variadic))]
+#[doc = "This trait is implemented for tuples up to 16 items long."]
+impl<T, V0> Verify<T> for All<(V0,)>
+where
+    V0: Verify<T>,
+{
+    type Error = V0::Error;
+    #[inline]
+    fn verify(&self, val: T) -> bool {
+        self.0.0.verify(val)
+    }
+    #[inline]
+    fn error(&self, val: T) -> Self::Error {
+        self.0.0.error(val).into()
+    }
+}
+
+#[cfg_attr(docsrs, doc(fake_variadic))]
+#[doc = "This trait is implemented for tuples up to 16 items long."]
+impl<T, V0> Verify<T> for Any<(V0,)>
+where
+    V0: Verify<T>,
+{
+    type Error = V0::Error;
+
+    #[inline]
+    fn verify(&self, val: T) -> bool {
+        self.0.0.verify(val)
+    }
+    #[inline]
+    fn error(&self, val: T) -> Self::Error {
+        self.0.0.error(val).into()
+    }
+}
+
+#[cfg_attr(docsrs, doc(fake_variadic))]
+#[doc = "This trait is implemented for tuples up to 16 items long."]
+impl<'a, T, V0> Check<&'a T> for Any<(V0,)>
+where
+    V0: Verify<&'a T>,
+    V0::Error: Into<DynError<'a>>,
+{
+    type Error = DynError<'a>;
+    #[inline]
+    fn check(&self, val: &'a T) -> Result<(), Self::Error> {
+        check(self, val).map_err(|a| a.into())
+    }
+}
