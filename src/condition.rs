@@ -205,7 +205,7 @@ all! { V13:13 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 V11:11
 all! { V14:14 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 V11:11 V12:12 V13:13 }
 all! { V15:15 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 V11:11 V12:12 V13:13 V14:14 }
 
-#[cfg_attr(docsrs, doc(fake_variadic))]
+// #[cfg_attr(docsrs, doc(fake_variadic))]
 #[doc = "This trait is implemented for tuples up to 16 items long."]
 impl<T, V0> Check<T> for (V0,)
 where
@@ -218,7 +218,7 @@ where
     }
 }
 
-#[cfg_attr(docsrs, doc(fake_variadic))]
+// #[cfg_attr(docsrs, doc(fake_variadic))]
 #[doc = "This trait is implemented for tuples up to 16 items long."]
 impl<T, V0> Verify<T> for All<(V0,)>
 where
@@ -235,7 +235,7 @@ where
     }
 }
 
-#[cfg_attr(docsrs, doc(fake_variadic))]
+// #[cfg_attr(docsrs, doc(fake_variadic))]
 #[doc = "This trait is implemented for tuples up to 16 items long."]
 impl<T, V0> Verify<T> for Any<(V0,)>
 where
@@ -253,7 +253,7 @@ where
     }
 }
 
-#[cfg_attr(docsrs, doc(fake_variadic))]
+// #[cfg_attr(docsrs, doc(fake_variadic))]
 #[doc = "This trait is implemented for tuples up to 16 items long."]
 impl<'a, T, V0> Check<&'a T> for Any<(V0,)>
 where

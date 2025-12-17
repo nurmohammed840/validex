@@ -3,7 +3,7 @@ members = ["macros"]
 
 [package]
 name = "validex"
-version = "0.0.1"
+version = "0.1.1"
 edition = "2024"
 license = "MIT"
 description = """
