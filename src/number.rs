@@ -5,7 +5,7 @@ pub struct Range<R>(pub R);
 
 impl<'a, R, T> Verify<&'a T> for Range<R>
 where
-    T: PartialOrd<T>,
+    T: ?Sized + PartialOrd<T>,
     R: RangeBounds<T> + Clone,
 {
     type Error = errors::RangeError<&'a T, R>;
@@ -24,7 +24,7 @@ where
 
 impl<'a, R, T> Check<&'a T> for Range<R>
 where
-    T: PartialOrd<T>,
+    T: ?Sized + PartialOrd<T>,
     R: RangeBounds<T> + Clone,
 {
     type Error = errors::RangeError<&'a T, R>;
@@ -35,6 +35,7 @@ where
 
 impl<'a, V, T> Verify<&'a T> for V
 where
+    T: ?Sized,
     V: PartialEq<T> + Clone,
 {
     type Error = errors::EquelError<&'a T, V>;

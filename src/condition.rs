@@ -25,6 +25,7 @@ where
 
 impl<'a, V, T> Check<&'a T> for Not<V>
 where
+    T: ?Sized,
     V: Verify<&'a T>,
 {
     type Error = errors::Unexpected<V::Error>;
@@ -199,12 +200,12 @@ where
 #[doc = "This trait is implemented for tuples up to 16 items long."]
 impl<'a, T, V0> Check<&'a T> for Any<(V0,)>
 where
+    T: ?Sized,
     V0: Verify<&'a T>,
-    V0::Error: Into<DynError<'a>>,
 {
-    type Error = DynError<'a>;
+    type Error = V0::Error;
     #[inline]
     fn check(&self, val: &'a T) -> Result<(), Self::Error> {
-        check(self, val).map_err(|a| a.into())
+        check(self, val)
     }
 }

@@ -29,7 +29,7 @@ pub fn expand(input: &DeriveInput) -> TokenStream {
     let mut t = TokenStream::new();
     quote!(t, {
         impl #impl_generics #ident #ty_generics #where_clause {
-            fn check(&self) -> ::validex::Result<(), ::validex::errors::FieldError<'_>> {
+            fn check(&self) -> ::std::result::Result<(), ::validex::errors::FieldError<'_>> {
                 #body
                 ::std::result::Result::Ok(())
             }

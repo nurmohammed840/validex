@@ -6,8 +6,8 @@ pub struct Length<R>(pub R);
 
 impl<R, T> Verify<&T> for Length<R>
 where
+    T: ?Sized + Count,
     R: RangeBounds<usize> + Clone,
-    T: Count,
 {
     type Error = errors::LengthError<R>;
     #[inline]
@@ -25,8 +25,8 @@ where
 
 impl<R, T> Check<&T> for Length<R>
 where
+    T: ?Sized + GetLen,
     R: RangeBounds<usize> + Clone,
-    T: GetLen,
 {
     type Error = errors::LengthError<R>;
     fn check(&self, val: &T) -> Result<(), Self::Error> {
