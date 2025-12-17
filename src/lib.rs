@@ -45,15 +45,10 @@ where
 }
 
 #[doc(hidden)]
-pub fn __field<'a, V, T>(
-    key: &'static str,
-    this: &V,
-    val: &'a T,
-) -> Result<(), errors::FieldError<'a>>
+pub fn __field<'e, V, T>(key: &'static str, this: &V, val: T) -> Result<(), errors::FieldError<'e>>
 where
-    T: ?Sized,
-    V: Check<&'a T>,
-    V::Error: Into<DynError<'a>>,
+    V: Check<T>,
+    V::Error: Into<DynError<'e>>,
 {
     Check::check(this, val).map_err(|err| errors::FieldError::new(key, err))
 }

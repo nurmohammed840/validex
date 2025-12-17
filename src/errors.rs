@@ -13,12 +13,12 @@ pub struct RangeError<T, R> {
 impl<T: Debug, R: Debug> Error for RangeError<T, R> {}
 impl<T: Debug, R: Debug> Display for RangeError<T, R> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "expected value {:?} in {:?}", self.value, self.range)
+        write!(f, "expected {:?} in {:?}", self.value, self.range)
     }
 }
 
 #[derive(Debug)]
-pub struct EquelError<A, B>(pub A, pub B);
+pub struct EquelError<T, B>(pub T, pub B);
 impl<A: Debug, B: Debug> Error for EquelError<A, B> {}
 impl<A: Debug, B: Debug> Display for EquelError<A, B> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -68,7 +68,9 @@ impl<'err> FieldError<'err> {
 impl<'err> Error for FieldError<'err> {}
 impl<'err> Display for FieldError<'err> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{} -> {}", self.key, self.error)
+        Display::fmt(&self.key, f)?;
+        f.write_str(" -> ")?;
+        Display::fmt(&self.error, f)
     }
 }
 
