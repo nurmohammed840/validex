@@ -4,9 +4,12 @@ use std::{
     fmt::{self, Debug, Display, Formatter},
 };
 
+/// Error when a value is out of [`Range`](crate::Range)
 #[derive(Debug)]
 pub struct RangeError<T, R> {
+    /// The actual input that caused the error.
     pub value: T,
+    /// The expected range.
     pub range: R,
 }
 
@@ -17,6 +20,24 @@ impl<T: Debug, R: Debug> Display for RangeError<T, R> {
     }
 }
 
+/// Error returned when values do not match.
+///
+/// # Example
+///
+/// ```rust
+/// # use validex::*;
+/// #[derive(Check)]
+/// struct Input {
+///   #[check(Not(42))]
+///   value: i32,
+/// }
+///
+/// # fn main() {
+/// let input = Input { value: 42 };
+/// let err = input.check().unwrap_err();
+/// println!("{err}"); // Not: expected 42
+/// # }
+/// ```
 #[derive(Debug)]
 pub struct EquelError<T, B>(pub T, pub B);
 impl<A: Debug, B: Debug> Error for EquelError<A, B> {}
@@ -30,6 +51,7 @@ impl<A: Debug, B: Debug> Display for EquelError<A, B> {
     }
 }
 
+/// Error returned when [`Not`](crate::Not) check fails.
 #[derive(Debug)]
 pub struct Unexpected<E>(pub E);
 impl<E: Display + Debug> Error for Unexpected<E> {}
@@ -40,9 +62,12 @@ impl<E: Display> Display for Unexpected<E> {
     }
 }
 
+/// Error for input length outside [`Length`](crate::Length) range.
 #[derive(Debug)]
 pub struct LengthError<R> {
+    /// The actual length of the input.
     pub len: usize,
+    /// The expected range for the length.
     pub range: R,
 }
 impl<R: Debug> Error for LengthError<R> {}
@@ -52,16 +77,20 @@ impl<R: Debug> Display for LengthError<R> {
     }
 }
 
+/// Reports an error when a field check fails.
 #[derive(Debug)]
 pub struct FieldError<'err> {
+    /// The name of the field that caused the error.
     pub key: &'static str,
+    /// The underlying error.
     pub error: DynError<'err>,
 }
 impl<'err> FieldError<'err> {
-    pub fn new(key: &'static str, err: impl Into<DynError<'err>>) -> FieldError<'err> {
+    /// Create a new [`FieldError`] for a given field key and error.
+    pub fn new(key: &'static str, error: impl Into<DynError<'err>>) -> FieldError<'err> {
         FieldError {
             key,
-            error: err.into(),
+            error: error.into(),
         }
     }
 }
@@ -74,6 +103,7 @@ impl<'err> Display for FieldError<'err> {
     }
 }
 
+/// A list of errors returned when multiple [`Any`](crate::Any) checks fail.
 #[derive(Debug)]
 pub struct Errors<'err>(pub Box<[DynError<'err>]>);
 impl<'err> Error for Errors<'err> {}

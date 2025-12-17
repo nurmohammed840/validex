@@ -2,6 +2,18 @@ use crate::*;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
 use std::ops::RangeBounds;
 
+/// Checks if the length of input is within a specified range.
+///
+/// # Example
+///
+/// ```rust
+/// # use validex::{Check, Length};
+/// #[derive(Check)]
+/// struct Input {
+///   #[check(Length(3..=5))]
+///   name: String,
+/// }
+/// ```
 pub struct Length<R>(pub R);
 
 impl<R, T> Verify<&T> for Length<R>

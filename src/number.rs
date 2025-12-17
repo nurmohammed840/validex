@@ -1,6 +1,18 @@
 use crate::*;
 use std::ops::RangeBounds;
 
+/// Checks if a value is within a specified range.
+///
+/// # Example
+///     
+/// ```rust
+/// # use validex::{Check, Range};
+/// #[derive(Check)]   
+/// struct Input {
+///    #[check(Range(1..=10))]
+///    value: i32,
+/// }
+/// ```
 pub struct Range<R>(pub R);
 
 impl<'a, R, T> Verify<&'a T> for Range<R>

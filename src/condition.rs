@@ -1,12 +1,69 @@
 use crate::*;
 
+/// A condition that requires all sub-conditions to be met.
+///
+/// ## Example
+///
+/// ```rust
+/// # use validex::*;
+/// let condition = All((Range(10..=20), Not(15)));
+/// assert!(condition.verify(&12));
+/// assert!(!condition.verify(&42));
+/// ```
 pub struct All<V>(pub V);
 
+/// A condition that requires any sub-condition to be met.
+///
+/// ## Example
+///
+/// ```rust
+/// # use validex::*;
+/// let condition = Any((Range(15..=20), 33, 42));
+/// assert!(!condition.verify(&12));
+/// assert!(condition.verify(&17));
+/// assert!(condition.verify(&42));
+/// ```
 pub struct Any<V>(pub V);
 
-pub struct Maybe<T>(pub T);
-
+/// Inverts the result of a sub-condition.
+///
+/// ## Example
+///
+/// ```rust
+/// # use validex::*;
+/// let condition = Not(Range(10..=20));
+/// assert!(condition.verify(&5));
+/// assert!(!condition.verify(&15));
+/// ```
+///
+/// ### De Morgan's laws
+///
+/// - when applied with [`Any`](crate::Any):
+///
+/// ```text
+/// Not(Any((c1, c2, ...))) -> All((Not(c1), Not(c2), ...))
+/// ```
+///
+/// when applied with [`All`](crate::All):
+///
+/// ```text
+/// Not(All((c1, c2, ...))) -> Any((Not(c1), Not(c2), ...))
+/// ```
 pub struct Not<V>(pub V);
+
+/// The `Maybe` combinator allows a validation field to be optional ([`Option`](std::option::Option))
+///
+/// ## Example
+///
+/// ```rust
+/// # use validex::*;
+/// #[derive(Check)]
+/// struct Input {
+///   #[check(Maybe((Range(10..=20))))]
+///   value: Option<u32>,
+/// }
+/// ```
+pub struct Maybe<T>(pub T);
 
 impl<T, V> Verify<T> for Not<V>
 where
@@ -150,7 +207,7 @@ all! { V15:15 => V0:0 V1:1 V2:2 V3:3 V4:4 V5:5 V6:6 V7:7 V8:8 V9:9 V10:10 V11:11
 
 #[cfg_attr(docsrs, doc(fake_variadic))]
 #[doc = "This trait is implemented for tuples up to 16 items long."]
-impl<'a, T, V0> Check<T> for (V0,)
+impl<T, V0> Check<T> for (V0,)
 where
     V0: Check<T>,
 {
@@ -174,7 +231,7 @@ where
     }
     #[inline]
     fn error(&self, val: T) -> Self::Error {
-        self.0.0.error(val).into()
+        self.0.0.error(val)
     }
 }
 
@@ -192,7 +249,7 @@ where
     }
     #[inline]
     fn error(&self, val: T) -> Self::Error {
-        self.0.0.error(val).into()
+        self.0.0.error(val)
     }
 }
 
