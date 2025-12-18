@@ -8,7 +8,7 @@ A Rust validation library.
 
 Unlike [validator](https://github.com/Keats/validator) library, which use syntex or string.
 
-[validex](https://github.com/nurmohammed840/validex) use concrete rust values in `#[check(...)]` attribute.
+[validex](https://github.com/nurmohammed840/validex) use concrete rust values in `#[check(...)]` attribute.  
 Any types that implement [`Check`](https://docs.rs/validex/latest/validex/trait.Check.html) trait can be used in `#[check(...)]`.
 
 This enables IDE-friendly features like: auto-import/fix, goto-def, syntax highlight, hover docs, etc...
@@ -30,7 +30,28 @@ Add `validex` to your `Cargo.toml`:
 validex = "0.1"
 ```
 
-Here is an simple example:
+Simple [Parse, don’t validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) example:
+
+```rust,ignore
+struct UserId(u32);
+
+impl Parse for UserId {
+  fn parse(buf: &mut ...) -> Result<UserId> {
+    let id: u32 = buf.parse()?;
+    let rule = Any((
+      Range(20..=30),
+      All((Not(45), Range(40..=50))),
+      100,
+    ));
+    if !rule.verify(&id) {
+      return Err(..);
+    }
+    Ok(UserId(id))
+  }
+}
+```
+
+Here is an simple example using `Check` derive macro:
 
 ```rust
 use validex::*;
